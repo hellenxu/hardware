@@ -1,4 +1,4 @@
-package ca.six.hareware.ble;
+package ca.six.hardware.ble;
 
 import android.app.Activity;
 import android.os.Bundle;
