@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">hareware</string>
+    <string name="start_scan">Start Scan</string>
+    <string name="stop_scan">Stop Scan</string>
 </resources>
