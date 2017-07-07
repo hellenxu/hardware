@@ -7,7 +7,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ import ca.six.hareware.R;
  * Copyright 2017 Six. All rights reserved.
  */
 
-public class BleDeviceAdapter extends RecyclerView.Adapter<BleDeviceAdapter.BleDeviceHolder> {
+public class BleDeviceAdapter extends RecyclerView.Adapter<BleDeviceAdapter.BleDeviceHolder>{
     private LayoutInflater inflater;
     private List<BluetoothDevice> deviceList = new ArrayList<>();
 

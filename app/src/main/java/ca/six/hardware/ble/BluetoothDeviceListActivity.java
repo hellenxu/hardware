@@ -3,6 +3,11 @@ package ca.six.hardware.ble;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,13 +27,15 @@ import ca.six.hareware.R;
  * Created by Xiaolin on 2017-06-26.
  */
 
-public class BluetoothDeviceListActivity extends Activity {
+public class BluetoothDeviceListActivity extends Activity{
     private BluetoothAdapter mBleAdapter;
     private List<BluetoothDevice> bluetoothDeviceList = new ArrayList<>();
     private Handler mHandler = new Handler();
     private boolean isScanning;
     private TextView tvStatus;
     private BleDeviceAdapter mDeviceAdapter;
+    private BluetoothGatt mBluetoothGatt;
+    private Context ctx;
 
     private static final int BLUETOOTH_ENABLE_REQUEST = 100;
     private static final int SCAN_PERIOD = 2000;
@@ -38,6 +45,7 @@ public class BluetoothDeviceListActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_ble_list);
 
+        ctx = this;
         mBleAdapter = BluetoothAdapter.getDefaultAdapter();
         tvStatus = (TextView) findViewById(R.id.tv_status);
         tvStatus.setOnClickListener(new View.OnClickListener() {
@@ -48,9 +56,10 @@ public class BluetoothDeviceListActivity extends Activity {
         });
 
         mDeviceAdapter = new BleDeviceAdapter(this, bluetoothDeviceList);
-        RecyclerView rvDeviceList = (RecyclerView) findViewById(R.id.rv_device_list);
-        rvDeviceList.setLayoutManager(new LinearLayoutManager(this));
-        rvDeviceList.setAdapter(mDeviceAdapter);
+        RecyclerView rvDevice = (RecyclerView) findViewById(R.id.rv_device_list);
+        rvDevice.setLayoutManager(new LinearLayoutManager(this));
+        rvDevice.setAdapter(mDeviceAdapter);
+        rvDevice.addOnItemTouchListener(new BleDeviceOnItemClickListener(this, rvDevice));
     }
 
     //check whether bluetooth is enabled.
@@ -81,12 +90,12 @@ public class BluetoothDeviceListActivity extends Activity {
                     isScanning = false;
                     mBleAdapter.stopLeScan(leScanCallback);
                     mDeviceAdapter.setData(bluetoothDeviceList);
-                    tvStatus.setText(R.string.start_scan);
+                    tvStatus.setText(R.string.menu_scan);
                 }
             }, SCAN_PERIOD);
             isScanning = true;
             mBleAdapter.startLeScan(leScanCallback);
-            tvStatus.setText(R.string.stop_scan);
+            tvStatus.setText(R.string.menu_stop);
         } else {
             isScanning = false;
             mBleAdapter.stopLeScan(leScanCallback);
@@ -97,8 +106,104 @@ public class BluetoothDeviceListActivity extends Activity {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            bluetoothDeviceList.add(device);
-            System.out.println("xxl - rssi: " + rssi);
+            if (!bluetoothDeviceList.contains(device)) {
+                bluetoothDeviceList.add(device);
+                System.out.println("xxl - rssi: " + rssi);
+            }
+        }
+    };
+
+    private class BleDeviceOnItemClickListener extends ItemClickListener {
+
+        public BleDeviceOnItemClickListener(Context ctx, RecyclerView rv) {
+            super(ctx, rv);
+        }
+
+        @Override
+        public void onItemClick(RecyclerView.ViewHolder vh) {
+            // connect device
+            final int selectedPosition = vh.getAdapterPosition();
+            System.out.println("xxl-selected: " + selectedPosition);
+
+            BluetoothDevice selectedDevice = null;
+            if(selectedPosition > bluetoothDeviceList.size() || selectedPosition < 0){
+                throw new IndexOutOfBoundsException("invalid index");
+            } else {
+                selectedDevice = bluetoothDeviceList.get(selectedPosition);
+            }
+            if(selectedDevice != null) {
+                connectDevice(selectedDevice);
+            } else {
+                throw new IllegalArgumentException("Selected bluetooth device is null.");
+            }
+        }
+    }
+
+    private void connectDevice(BluetoothDevice device){
+        mBluetoothGatt = device.connectGatt(this, false, gattCallback);
+    }
+
+    private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            super.onConnectionStateChange(gatt, status, newState);
+            if(status == BluetoothGatt.GATT_SUCCESS){
+                System.out.println("xxl-GATT-SUCCESS.");
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            super.onServicesDiscovered(gatt, status);
+            System.out.println("xxl-onServiceDiscovered");
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicRead(gatt, characteristic, status);
+            System.out.println("xxl-onCharacteristicRead");
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            System.out.println("xxl-onCharacteristicWrite");
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicChanged(gatt, characteristic);
+            System.out.println("xxl-onCharacteristicChanged");
+        }
+
+        @Override
+        public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            super.onDescriptorRead(gatt, descriptor, status);
+            System.out.println("xxl-onDescriptorRead");
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            super.onDescriptorWrite(gatt, descriptor, status);
+            System.out.println("xxl-onDescriptorRead");
+        }
+
+        @Override
+        public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+            super.onReliableWriteCompleted(gatt, status);
+            System.out.println("xxl-onDescriptorRead");
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            super.onReadRemoteRssi(gatt, rssi, status);
+            System.out.println("xxl-onDescriptorRead");
+        }
+
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            super.onMtuChanged(gatt, mtu, status);
+            System.out.println("xxl-onDescriptorRead");
         }
     };
 }
