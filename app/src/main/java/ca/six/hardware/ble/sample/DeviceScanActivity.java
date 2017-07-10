@@ -1,4 +1,4 @@
-package ca.six.hardware.ble;
+package ca.six.hardware.ble.sample;
 
 import android.app.Activity;
 import android.app.ListActivity;
@@ -10,8 +10,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.ParcelUuid;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;

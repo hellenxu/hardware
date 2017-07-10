@@ -1,4 +1,4 @@
-package ca.six.hardware.ble;
+package ca.six.hardware.ble.sample;
 
 import android.app.ActionBar;
 import android.app.Activity;

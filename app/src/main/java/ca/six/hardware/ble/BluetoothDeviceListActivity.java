@@ -20,6 +20,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import ca.six.hardware.Constant;
 import ca.six.hareware.R;
 
 /**
@@ -27,7 +28,7 @@ import ca.six.hareware.R;
  * Created by Xiaolin on 2017-06-26.
  */
 
-public class BluetoothDeviceListActivity extends Activity{
+public class BluetoothDeviceListActivity extends Activity {
     private BluetoothAdapter mBleAdapter;
     private List<BluetoothDevice> bluetoothDeviceList = new ArrayList<>();
     private Handler mHandler = new Handler();
@@ -63,12 +64,12 @@ public class BluetoothDeviceListActivity extends Activity{
     }
 
     //check whether bluetooth is enabled.
-    public boolean isBluetoothEnabled(){
+    public boolean isBluetoothEnabled() {
         return null != mBleAdapter && mBleAdapter.isEnabled() && !mBleAdapter.isDiscovering();
     }
 
-    public void requestBluetoothEnable(){
-        if(null != mBleAdapter && !mBleAdapter.isEnabled()){
+    public void requestBluetoothEnable() {
+        if (null != mBleAdapter && !mBleAdapter.isEnabled()) {
             Intent enabledBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enabledBluetooth, BLUETOOTH_ENABLE_REQUEST);
         }
@@ -77,13 +78,13 @@ public class BluetoothDeviceListActivity extends Activity{
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == Activity.RESULT_OK && requestCode == BLUETOOTH_ENABLE_REQUEST){
+        if (resultCode == Activity.RESULT_OK && requestCode == BLUETOOTH_ENABLE_REQUEST) {
             //do things after bluetooth enabled
         }
     }
 
-    private void scanLeDevice(final boolean enable){
-        if(enable){
+    private void scanLeDevice(final boolean enable) {
+        if (enable) {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -108,6 +109,7 @@ public class BluetoothDeviceListActivity extends Activity{
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             if (!bluetoothDeviceList.contains(device)) {
                 bluetoothDeviceList.add(device);
+                mDeviceAdapter.setData(bluetoothDeviceList);
                 System.out.println("xxl - rssi: " + rssi);
             }
         }
@@ -126,12 +128,12 @@ public class BluetoothDeviceListActivity extends Activity{
             System.out.println("xxl-selected: " + selectedPosition);
 
             BluetoothDevice selectedDevice = null;
-            if(selectedPosition > bluetoothDeviceList.size() || selectedPosition < 0){
+            if (selectedPosition > bluetoothDeviceList.size() || selectedPosition < 0) {
                 throw new IndexOutOfBoundsException("invalid index");
             } else {
                 selectedDevice = bluetoothDeviceList.get(selectedPosition);
             }
-            if(selectedDevice != null) {
+            if (selectedDevice != null) {
                 connectDevice(selectedDevice);
             } else {
                 throw new IllegalArgumentException("Selected bluetooth device is null.");
@@ -139,15 +141,21 @@ public class BluetoothDeviceListActivity extends Activity{
         }
     }
 
-    private void connectDevice(BluetoothDevice device){
-        mBluetoothGatt = device.connectGatt(this, false, gattCallback);
+    private void connectDevice(BluetoothDevice device) {
+        Intent deviceDetailsIntent = new Intent(this, DeviceDetailsActivity.class);
+        deviceDetailsIntent.putExtra(Constant.BUNDLE_KEY_CHOSEN_DEVICE, device);
+        startActivity(deviceDetailsIntent);
     }
+
+//    private void connectDevice(BluetoothDevice device) {
+//        mBluetoothGatt = device.connectGatt(this, false, gattCallback);
+//    }
 
     private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
-            if(status == BluetoothGatt.GATT_SUCCESS){
+            if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("xxl-GATT-SUCCESS.");
             }
         }

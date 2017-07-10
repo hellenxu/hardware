@@ -1,4 +1,4 @@
-package ca.six.hardware.ble;
+package ca.six.hardware.ble.sample;
 
 import java.util.HashMap;
  
